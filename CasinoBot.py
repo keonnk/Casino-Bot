@@ -15,6 +15,28 @@ def flipCoin():
         return False #False (integer between 50-100) is tails
 
 
+# - Roulette functions - #
+
+def roll():
+    #There are 38 spaces, including the 2 green's
+    #Probability to hit a green is 2/38 = 5.26%
+    #Probability to hit a red is 18/38 = 47.368%
+    #Probability to hit a black is 18/38 = 47.368%
+
+    #Green spaces will be 1 and 2
+    #Red spaces will be 3-20
+    #Black spaces will be 21-38
+
+    roll = random.randint(1, 38)
+
+    if roll <= 2:    #Rolled green
+        return "green"
+    elif roll <= 20: #Rolled red
+        return "red"
+    else:            #Rolled black, (equivilent to elif roll <= 38)
+        return "black"
+
+
 # - Blackjack functions - #
 
 #Used when an ace is in the hand, called in the handValue() function if it encounters an ace
@@ -144,7 +166,6 @@ async def coinflip(context, coinSide):
             errorEmbed = discord.Embed(title="Input Error!", description="Please enter the proper input", colour=0xda1ae3)
             await context.message.channel.send(embed=errorEmbed)
 
-
 @client.command(name="blackjack")
 async def blackjack(context):
 
@@ -228,4 +249,40 @@ async def blackjack(context):
                     break
         else:
             await context.message.channel.send("Error! Something went wrong")
+            break
+
+
+@client.command(name="roulette")
+async def roulette(context):
+    
+    initialEmbed = discord.Embed(title="Roulette", color=0xe416ee)
+    initialEmbed.add_field( 
+    name="Type red, black, or green to play!", 
+    value="Probability to hit a green is 2/38 = 5.26%\n Probability to hit a red is 18/38 = 47.368%\n Probability to hit a black is 18/38 = 47.368%"
+    )
+    await context.message.channel.send(embed=initialEmbed)
+
+    #Waiting for message from the user, also checks if it's the same user that invoked the !roulette command to make sure no one else can play for them
+    bet = await client.wait_for('message', check=lambda message: message.author == context.author)
+
+    rollColor = roll() #rolls red, black, or green
+
+    while True:
+
+        if bet.content != "red" and bet.content != "black" and bet.content != "green": #Wrong input
+            errorEmbed = discord.Embed(title="Enter a proper input!", color=discord.Color.gold())
+            await context.message.channel.send(embed=errorEmbed)
+            continue
+
+        if bet.content == rollColor: #Player wins
+            winEmbed = discord.Embed(title="You win!", color=discord.Color.green())
+            results = "Rolled a " + rollColor + "!"
+            winEmbed.add_field(name=results, value="-------------")
+            await context.message.channel.send(embed=winEmbed)
+            break
+        else: #Player loses
+            loseEmbed = discord.Embed(title="You lose", color=discord.Color.red())
+            results = "Rolled a " + rollColor + "!"
+            loseEmbed.add_field(name=results, value="-------------")
+            await context.message.channel.send(embed=loseEmbed)
             break
