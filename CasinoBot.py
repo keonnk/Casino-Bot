@@ -5,15 +5,7 @@ from discord.ext import commands
 
 client = commands.Bot(command_prefix='!')
 
-# - Functions - #
- 
-def randomIntAdd():
-    a = random.randint(1, 100)
-    outStr = str(a)
-    b = random.randint(1, 100)
-    sum = a + b
-    outStr += " + " + str(b) + " = " + str(sum)
-    return outStr
+# - Coinflip functions - #
 
 def flipCoin():
     r = random.randint(0, 101) #Generates a random integer between 0 and 100
@@ -21,6 +13,7 @@ def flipCoin():
         return True #True is heads
     else:
         return False #False (integer between 50-100) is tails
+
 
 # - Blackjack functions - #
 
@@ -117,43 +110,6 @@ async def on_ready():
 @client.event
 async def on_connect():
     await client.change_presence(status=discord.Status.online, activity=discord.Game("Beep Boop"))
-    '''generalChannel = client.get_channel(799181579112808478)
-    await generalChannel.send("Bot connected!")'''
-
-
-
-# - Test commands - #
-
-@client.command(name="hello")
-async def hello(context):
-    await context.message.channel.send('Hello!')
-
-@client.command(name="randomAdd")
-async def randomAdd(context):
-    await context.message.channel.send(randomIntAdd())
-
-@client.command(name="mustard")
-async def mustard(context):
-    await context.message.channel.send("Ketchup :o")
-
-@client.command(name="embedTest")
-async def embed(context):
-    myEmbed = discord.Embed(title="First embed", color=0xe416ee)
-    myEmbed.add_field(name="over", value="overValue")
-    myEmbed.add_field(name="under", value="underValue", inline=False)
-    await context.message.channel.send(embed=myEmbed)
-
-#Command that will take 2 numbers as arguments and send the sum
-#Ex: 
-    # !add 3 5
-    # output: 3 + 5 = 8
-@client.command(name="add")
-async def add(context, arg1, arg2):
-    outStr = arg1 + " + " + arg2 + " = "
-    Sum = int(arg1) + int(arg2)
-    outStr += str(Sum)
-    await context.message.channel.send(outStr)
-
 
 
 # - Casino Commands - #
