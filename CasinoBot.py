@@ -1,6 +1,5 @@
 import discord
 import random
-import time
 from discord.ext import commands
 
 client = commands.Bot(command_prefix='!')
@@ -249,7 +248,7 @@ async def blackjack(context):
                     break
         else:
             await context.message.channel.send("Error! Something went wrong")
-            break
+            continue
         
 @client.command(name="roulette")
 async def roulette(context):
@@ -261,12 +260,12 @@ async def roulette(context):
     )
     await context.message.channel.send(embed=initialEmbed)
 
-    #Waiting for message from the user, also checks if it's the same user that invoked the !roulette command to make sure no one else can play for them
-    bet = await client.wait_for('message', check=lambda message: message.author == context.author)
-
-    rollColor = roll() #rolls red, black, or green
-
     while True:
+
+        #Waiting for message from the user, also checks if it's the same user that invoked the !roulette command to make sure no one else can play for them
+        bet = await client.wait_for('message', check=lambda message: message.author == context.author)
+
+        rollColor = roll() #rolls red, black, or green
 
         if bet.content != "red" and bet.content != "black" and bet.content != "green": #Wrong input
             errorEmbed = discord.Embed(title="Enter a proper input!", color=discord.Color.gold())
