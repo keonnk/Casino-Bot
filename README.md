@@ -5,5 +5,6 @@ Implemented using discord.py
 
 TODO:
 - Improve card visualization for blackjack
+- Add a card value count for blackjack
 - Improve coinflip
 - Add !help commands
