@@ -1,8 +1,14 @@
 import discord
-import random
+import os
 from discord.ext import commands
+import random
+import sqlite3
 
 client = commands.Bot(command_prefix='!')
+
+connection = sqlite3.connect("balance.db") #Creating a connection with the database for holding user balance
+balance_DB = connection.cursor()
+
 
 # - Coinflip functions- #
 
@@ -121,6 +127,20 @@ def displayCards(ranks, suits):
 def displayHalfBotCards(botRanks, botSuits):
     return str(botRanks[0]) + botSuits[0] + " ??" #Only showing the first bot card 
 
+def depositPlayer(amount, userID):
+  balance_DB.execute("UPDATE Users SET balance = balance + ? WHERE userID = ?", (amount, userID))
+  connection.commit()
+
+def withdrawalPlayer(amount, userID):
+  balanceList = balance_DB.execute("SELECT balance FROM Users WHERE userID = ?", (userID,)).fetchone()
+  balance = int(balanceList[0])
+  if balance < amount:
+    return False
+  else:
+    balance_DB.execute("UPDATE Users SET balance = balance - ? WHERE userID = ?", (amount, userID))
+    connection.commit()
+    return True
+
 #---------------------------------------------------------------------------------------------#
 
 @client.event
@@ -129,41 +149,67 @@ async def on_ready():
 
 @client.event
 async def on_connect():
-    await client.change_presence(status=discord.Status.online, activity=discord.Game("Beep Boop"))
-
+    await client.change_presence(status=discord.Status.online, activity=discord.Game("Gambling"))
+    
 
 # - Casino Commands - #
 
+#Used to initialize a new user into the database (starts with $1000)
+#Will also be used to reset a users balance to $1000
+@client.command(name="create")
+async def createAccount(context):
+  userID = context.author.id 
+  balance = 1000
+  balance_DB.execute("INSERT INTO Users VALUES (?, ?);", (userID, balance)) #Make this UNIQUE
+  connection.commit()
+  infoEmbed = discord.Embed(title="Account created, you have $1000!")
+  await context.message.channel.send(embed=infoEmbed)
+
+
 @client.command(name="coinflip")
-async def coinflip(context, coinSide):
+async def coinflip(context, coinSide, userBet):
 
     #NOTE: It doesn't print error when no argument is given, fix that later
 
     side = flipCoin()
-    
-    if side == True: #coin flipped heads
-        if coinSide == "heads" or coinSide == "Heads":
-            winEmbed = discord.Embed(title="You win!  :grin:", description="Coin flipped heads", colour=0x28b463)
-            await context.message.channel.send(embed=winEmbed)
-        elif coinSide == "tails" or coinSide == "Tails":
-            loseEmbed = discord.Embed(title="You lose :slight_frown:", description="Coin flipped heads", colour=0xc0392b)
-            await context.message.channel.send(embed=loseEmbed)
-        else:
-            errorEmbed = discord.Embed(title="Input Error!", description="Please enter the proper input", colour=0xda1ae3)
-            await context.message.channel.send(embed=errorEmbed)
+    userID = context.author.id
+    userBet = int(userBet)
+    withdrawalValidity = withdrawalPlayer(userBet, userID)
+
+    if withdrawalValidity == True:  #withdrawing money in advanced, to check if there is enough
+
+      if side == True: #coin flipped heads
+          if coinSide == "heads" or coinSide == "Heads":
+              winEmbed = discord.Embed(title="You win!  :grin:", description="Coin flipped heads", colour=0x28b463)
+              winningAmount = userBet * 2
+              depositPlayer(winningAmount, userID) #giving the winning player double their initial bet
+              await context.message.channel.send(embed=winEmbed)
+          elif coinSide == "tails" or coinSide == "Tails":
+              loseEmbed = discord.Embed(title="You lose :slight_frown:", description="Coin flipped heads", colour=0xc0392b)
+              await context.message.channel.send(embed=loseEmbed)
+          else:
+              errorEmbed = discord.Embed(title="Input Error!", description="Please enter the proper input", colour=0xda1ae3)
+              depositPlayer(userBet, userID) #Refunding the player
+              await context.message.channel.send(embed=errorEmbed)
 
 
-    if side == False: #coin flipped tails
-        if coinSide == "tails" or coinSide == "Tails":
-            winEmbed = discord.Embed(title="You win!  :grin:", description="Coin flipped tails", colour=0x28b463)
-            await context.message.channel.send(embed=winEmbed)
-        elif coinSide == "heads" or coinSide == "Heads":
-            loseEmbed = discord.Embed(title="You lose :slight_frown:", description="Coin flipped tails", colour=0xc0392b)
-            await context.message.channel.send(embed=loseEmbed)
-        else:
-            errorEmbed = discord.Embed(title="Input Error!", description="Please enter the proper input", colour=0xda1ae3)
-            await context.message.channel.send(embed=errorEmbed)
+      if side == False: #coin flipped tails
+          if coinSide == "tails" or coinSide == "Tails":
+              winEmbed = discord.Embed(title="You win!  :grin:", description="Coin flipped tails", colour=0x28b463)
+              winningAmount = userBet * 2
+              depositPlayer(winningAmount, userID) #giving the winning player double their initial bet
+              await context.message.channel.send(embed=winEmbed)
+          elif coinSide == "heads" or coinSide == "Heads":
+              loseEmbed = discord.Embed(title="You lose :slight_frown:", description="Coin flipped tails", colour=0xc0392b)
+              await context.message.channel.send(embed=loseEmbed)
+          else:
+              errorEmbed = discord.Embed(title="Input Error!", description="Please enter the proper input", colour=0xda1ae3)
+              depositPlayer(userBet, userID) #Refunding the player
+              await context.message.channel.send(embed=errorEmbed)
 
+    else: 
+      errorEmbed = discord.Embed(title="Not enough balance!", colour=0xda1ae3)
+      await context.message.channel.send(embed=errorEmbed)
 
 @client.command(name="blackjack")
 async def blackjack(context):
@@ -284,3 +330,28 @@ async def roulette(context):
             loseEmbed.add_field(name=results, value=":slight_frown:")
             await context.message.channel.send(embed=loseEmbed)
             break
+
+
+# Admin commands #
+
+@client.command(name="showDatabase")
+async def showDatabase(context):
+  DBlist = (balance_DB.execute("SELECT * FROM Users").fetchall())
+  str1 = ''.join(str(e) for e in DBlist) #converting the list to a string to work in the embed
+  connection.commit()
+  infoEmbed = discord.Embed(title="$ Balance Database $", description=str1)
+  await context.message.channel.send(embed=infoEmbed)
+
+@client.command(name="resetDatabase")
+async def resetDatabase(context):
+  balance_DB.execute("DROP TABLE IF EXISTS Users")
+  balance_DB.execute("CREATE TABLE Users (userID int, balance int)")
+  connection.commit()
+  infoEmbed = discord.Embed(title="Database Reset!")
+  await context.message.channel.send(embed=infoEmbed)
+
+
+#TODO Adding a users balance
+#TODO Clearing a users balance
+
+client.run(os.getenv('TOKEN'))
