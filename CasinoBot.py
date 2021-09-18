@@ -337,8 +337,9 @@ async def roulette(context):
 @client.command(name="showDatabase")
 async def showDatabase(context):
   DBlist = (balance_DB.execute("SELECT * FROM Users").fetchall())
-  str1 = ''.join(str(e) for e in DBlist) #converting the list to a string to work in the embed
-  connection.commit()
+  str1 = ''
+  for i in range(len(DBlist)):  #Converting the 2D list entries into a string with \n seperating every inner list
+    str1 = str1 + str(DBlist[i]) + "\n"
   infoEmbed = discord.Embed(title="$ Balance Database $", description=str1)
   await context.message.channel.send(embed=infoEmbed)
 
