@@ -297,39 +297,51 @@ async def blackjack(context):
             continue
         
 @client.command(name="roulette")
-async def roulette(context):
+async def roulette(context, userBet):
     
-    initialEmbed = discord.Embed(title="Roulette", color=0xe416ee)
-    initialEmbed.add_field( 
-    name="Type red, black, or green to play!", 
-    value="Probability to roll a :red_circle: (red) is 18/38 = 47.368%\n  Probability to roll a :black_circle: (black) is 18/38 = 47.368%\n Probability to roll a :green_circle: (green) is 2/38 = 5.26%"
-    )
-    await context.message.channel.send(embed=initialEmbed)
+  initialEmbed = discord.Embed(title="Roulette", color=0xe416ee)
+  initialEmbed.add_field( 
+  name="Type red, black, or green to play!", 
+  value="Probability to roll a :red_circle: (red) is 18/38 = 47.368%\n  Probability to roll a :black_circle: (black) is 18/38 = 47.368%\n Probability to roll a :green_circle: (green) is 2/38 = 5.26%"
+  )
+  await context.message.channel.send(embed=initialEmbed)
 
+  userID = context.author.id
+  userBet = int(userBet)
+  withdrawalValidity = withdrawalPlayer(userBet, userID)
+
+  if withdrawalValidity == True:  #withdrawing money in advanced, to check if there is enough
+    
     while True:
 
-        #Waiting for message from the user, also checks if it's the same user that invoked the !roulette command to make sure no one else can play for them
-        bet = await client.wait_for('message', check=lambda message: message.author == context.author)
+      #Waiting for message from the user, also checks if it's the same user that invoked the !roulette command to make sure no one else can play for them
+      bet = await client.wait_for('message', check=lambda message: message.author == context.author)
 
-        rollColor = roll() #rolls red, black, or green
+      rollColor = roll() #rolls red, black, or green
 
-        if bet.content != "red" and bet.content != "black" and bet.content != "green": #Wrong input
-            errorEmbed = discord.Embed(title="Enter a proper input!", color=discord.Color.gold())
-            await context.message.channel.send(embed=errorEmbed)
-            continue
+      if bet.content != "red" and bet.content != "black" and bet.content != "green": #Wrong input
+          errorEmbed = discord.Embed(title="Enter a proper input!", color=discord.Color.gold())
+          await context.message.channel.send(embed=errorEmbed)
+          continue
 
-        if bet.content == rollColor: #Player wins
-            winEmbed = discord.Embed(title="You win!", color=discord.Color.green())
-            results = "Rolled a " + rollColor + "!"
-            winEmbed.add_field(name=results, value=":grin:")
-            await context.message.channel.send(embed=winEmbed)
-            break
-        else: #Player loses
-            loseEmbed = discord.Embed(title="You lose", color=discord.Color.red())
-            results = "Rolled a " + rollColor + "!"
-            loseEmbed.add_field(name=results, value=":slight_frown:")
-            await context.message.channel.send(embed=loseEmbed)
-            break
+      if bet.content == rollColor: #Player wins
+          winEmbed = discord.Embed(title="You win!", color=discord.Color.green())
+          results = "Rolled a " + rollColor + "!"
+          winEmbed.add_field(name=results, value=":grin:")
+          depositPlayer(userBet*2, userID)
+          await context.message.channel.send(embed=winEmbed)
+          break
+
+      else: #Player loses
+          loseEmbed = discord.Embed(title="You lose", color=discord.Color.red())
+          results = "Rolled a " + rollColor + "!"
+          loseEmbed.add_field(name=results, value=":slight_frown:")
+          await context.message.channel.send(embed=loseEmbed)
+          break
+  
+  else: 
+    errorEmbed = discord.Embed(title="Not enough balance!", colour=0xda1ae3)
+    await context.message.channel.send(embed=errorEmbed)
 
 
 # Admin commands #
