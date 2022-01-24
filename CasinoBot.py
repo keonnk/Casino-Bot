@@ -1,3 +1,4 @@
+from turtle import title
 import discord
 import os
 from discord.ext import commands
@@ -152,7 +153,16 @@ async def on_connect():
     await client.change_presence(status=discord.Status.online, activity=discord.Game("Gambling"))
     
 
-# - Casino Commands - #
+# - Logisitcal commands - #
+
+@client.command(name="balance")
+async def balance(context):
+    userName = context.author.name
+    balance = balance_DB.execute("SELECT balance FROM Users WHERE userID = ?", (userName,)).fetchone()
+    balanceStr = str(balance[0]) #Line above returns a list with one element, so taking the first and only element
+    balanceEmbed = discord.Embed(title="$ Balance $", description="$"+balanceStr, colour=0x28b463)
+    await context.message.channel.send(embed=balanceEmbed)
+
 
 #Used to initialize a new user into the database (starts with $1000)
 #Will also be used to reset a users balance to $1000
@@ -165,6 +175,7 @@ async def createAccount(context):
   infoEmbed = discord.Embed(title="Account created, you have $1000!")
   await context.message.channel.send(embed=infoEmbed)
 
+# - Casino Commands - #
 
 @client.command(name="coinflip")
 async def coinflip(context, coinSide, userBet):
