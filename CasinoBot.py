@@ -1,4 +1,3 @@
-from turtle import title
 import discord
 import os
 from discord.ext import commands
@@ -223,7 +222,7 @@ async def coinflip(context, coinSide, userBet):
       await context.message.channel.send(embed=errorEmbed)
 
 @client.command(name="blackjack")
-async def blackjack(context):
+async def blackjack(context, userBet):
 
     #Ranks will be used to hold card number/face, suits will be used to hold suits
     #The same list positon means its the same card
@@ -232,80 +231,95 @@ async def blackjack(context):
         # playerSuits = ['♣', '♥']
         # players cards are 2♣ and K♥
 
-    playerRanks = []
-    playerSuits = []
-    botRanks = []
-    botSuits = []
+    #NOTE: It doesn't print error when no argument is given, fix that later
+    
+    userName = context.author.name
+    userBet = int(userBet)
+    withdrawalValidity = withdrawalPlayer(userBet, userName)
 
-    #Adding two cards to the users cards to start
-    for i in range(2):
-        dealCard(playerRanks, playerSuits)
+    if withdrawalValidity == True:  #withdrawing money in advanced, to check if there is enough
 
-    #Adding two cards to the bots cards to start
-    for i in range(2):
-        dealCard(botRanks, botSuits)
+      playerRanks = []
+      playerSuits = []
+      botRanks = []
+      botSuits = []
 
-    await context.message.channel.send("enter \"hit\" or \"stand\" during play\n")
+      #Adding two cards to the users cards to start
+      for i in range(2):
+          dealCard(playerRanks, playerSuits)
 
-    while True:
+      #Adding two cards to the bots cards to start
+      for i in range(2):
+          dealCard(botRanks, botSuits)
 
-        #Initial Embed that will show at the start and after every player command(if it doesn't end the game)
-        initialEmbed = discord.Embed(title="Blackjack", color=0xe416ee)
-        initialEmbed.add_field(name="Bot's Cards", value=displayHalfBotCards(botRanks, botSuits))   
-        initialEmbed.add_field(name="Your Cards", value=displayCards(playerRanks, playerSuits), inline=False)
-        await context.send(embed=initialEmbed)
+      await context.message.channel.send("enter \"hit\" or \"stand\" during play\n")
 
-        #Waiting for message from the user, also checks if it's the same user that invoked the !blackjack command to make sure no one else can play for them
-        response = await client.wait_for('message', check=lambda message: message.author == context.author)
+      while True:
 
-        if response.content == "hit":
-            dealCard(playerRanks, playerSuits)
-            if handValue(playerRanks) > 21: #Player bust
-                innerEmbed = discord.Embed(title="Blackjack", color=discord.Color.red())
-                innerEmbed.add_field(name="Bot's Cards", value=displayCards(botRanks, botSuits))   
-                innerEmbed.add_field(name="Your Cards", value=displayCards(playerRanks, playerSuits), inline=False)
-                innerEmbed.add_field(name="You bust! Bot wins!", value=":slight_frown:", inline=False) #NOTE:it's not value="" because if it is whitespace it causes an error
-                await context.send(embed=innerEmbed)
-                break
+          #Initial Embed that will show at the start and after every player command(if it doesn't end the game)
+          initialEmbed = discord.Embed(title="Blackjack", color=0xe416ee)
+          initialEmbed.add_field(name="Bot's Cards", value=displayHalfBotCards(botRanks, botSuits))   
+          initialEmbed.add_field(name="Your Cards", value=displayCards(playerRanks, playerSuits), inline=False)
+          await context.send(embed=initialEmbed)
 
-        elif response.content == "stand":
-            while (handValue(botRanks) < 17) and (handValue(botRanks) < handValue(playerRanks)): #Determining whether bot should pick up cards or not
-                dealCard(botRanks, botSuits)
+          #Waiting for message from the user, also checks if it's the same user that invoked the !blackjack command to make sure no one else can play for them
+          response = await client.wait_for('message', check=lambda message: message.author == context.author)
 
-            if handValue(botRanks) > 21: #Bot bust
-                innerEmbed = discord.Embed(title="Blackjack", color=discord.Color.green())
-                innerEmbed.add_field(name="Bot's Cards", value=displayCards(botRanks, botSuits))   
-                innerEmbed.add_field(name="Your Cards", value=displayCards(playerRanks, playerSuits), inline=False)
-                innerEmbed.add_field(name="Bot busts! You win!", value=":grin:", inline=False)
-                await context.message.channel.send(embed=innerEmbed)
-                break
-            else:
-                if handValue(botRanks) > handValue(playerRanks): #Bot Wins
-                    innerEmbed = discord.Embed(title="Blackjack", color=discord.Color.red())
-                    innerEmbed.add_field(name="Bot's Cards", value=displayCards(botRanks, botSuits))   
-                    innerEmbed.add_field(name="Your Cards", value=displayCards(playerRanks, playerSuits), inline=False)
-                    innerEmbed.add_field(name="Bot wins!", value=":slight_frown:", inline=False)
-                    await context.message.channel.send(embed=innerEmbed)
-                    break
+          if response.content == "hit":
+              dealCard(playerRanks, playerSuits)
+              if handValue(playerRanks) > 21: #Player bust
+                  innerEmbed = discord.Embed(title="Blackjack", color=discord.Color.red())
+                  innerEmbed.add_field(name="Bot's Cards", value=displayCards(botRanks, botSuits))   
+                  innerEmbed.add_field(name="Your Cards", value=displayCards(playerRanks, playerSuits), inline=False)
+                  innerEmbed.add_field(name="You bust! Bot wins!", value=":slight_frown:", inline=False) #NOTE:it's not value="" because if it is whitespace it causes an error
+                  await context.send(embed=innerEmbed)
+                  break
 
-                elif handValue(botRanks) == handValue(playerRanks): #Push/Draw
-                    innerEmbed = discord.Embed(title="Blackjack", color=discord.Color.orange())
-                    innerEmbed.add_field(name="Bot's Cards", value=displayCards(botRanks, botSuits))   
-                    innerEmbed.add_field(name="Your Cards", value=displayCards(playerRanks, playerSuits), inline=False)
-                    innerEmbed.add_field(name="Push! It was a draw!", value=":open_mouth:", inline=False)
-                    await context.message.channel.send(embed=innerEmbed)
-                    break
+          elif response.content == "stand":
+              while (handValue(botRanks) < 17) and (handValue(botRanks) < handValue(playerRanks)): #Determining whether bot should pick up cards or not
+                  dealCard(botRanks, botSuits)
 
-                else: #Player wins
-                    innerEmbed = discord.Embed(title="Blackjack", color=discord.Color.green())
-                    innerEmbed.add_field(name="Bot's Cards", value=displayCards(botRanks, botSuits))   
-                    innerEmbed.add_field(name="Your Cards", value=displayCards(playerRanks, playerSuits), inline=False)
-                    innerEmbed.add_field(name="You win!", value=":grin:", inline=False)
-                    await context.message.channel.send(embed=innerEmbed)
-                    break
-        else:
-            await context.message.channel.send("Error! Something went wrong")
-            continue
+              if handValue(botRanks) > 21: #Bot bust
+                  innerEmbed = discord.Embed(title="Blackjack", color=discord.Color.green())
+                  innerEmbed.add_field(name="Bot's Cards", value=displayCards(botRanks, botSuits))   
+                  innerEmbed.add_field(name="Your Cards", value=displayCards(playerRanks, playerSuits), inline=False)
+                  innerEmbed.add_field(name="Bot busts! You win!", value=":grin:", inline=False)
+                  depositPlayer(userBet*2, userName)
+                  await context.message.channel.send(embed=innerEmbed)
+                  break
+              else:
+                  if handValue(botRanks) > handValue(playerRanks): #Bot Wins
+                      innerEmbed = discord.Embed(title="Blackjack", color=discord.Color.red())
+                      innerEmbed.add_field(name="Bot's Cards", value=displayCards(botRanks, botSuits))   
+                      innerEmbed.add_field(name="Your Cards", value=displayCards(playerRanks, playerSuits), inline=False)
+                      innerEmbed.add_field(name="Bot wins!", value=":slight_frown:", inline=False)
+                      await context.message.channel.send(embed=innerEmbed)
+                      break
+
+                  elif handValue(botRanks) == handValue(playerRanks): #Push/Draw
+                      innerEmbed = discord.Embed(title="Blackjack", color=discord.Color.orange())
+                      innerEmbed.add_field(name="Bot's Cards", value=displayCards(botRanks, botSuits))   
+                      innerEmbed.add_field(name="Your Cards", value=displayCards(playerRanks, playerSuits), inline=False)
+                      innerEmbed.add_field(name="Push! It was a draw!", value=":open_mouth:", inline=False)
+                      depositPlayer(userBet, userName) #Gives the same amount back cause of push
+                      await context.message.channel.send(embed=innerEmbed)
+                      break
+
+                  else: #Player wins
+                      innerEmbed = discord.Embed(title="Blackjack", color=discord.Color.green())
+                      innerEmbed.add_field(name="Bot's Cards", value=displayCards(botRanks, botSuits))   
+                      innerEmbed.add_field(name="Your Cards", value=displayCards(playerRanks, playerSuits), inline=False)
+                      innerEmbed.add_field(name="You win!", value=":grin:", inline=False)
+                      depositPlayer(userBet*2, userName)
+                      await context.message.channel.send(embed=innerEmbed)
+                      break
+          else:
+              await context.message.channel.send("Error! Something went wrong")
+              continue
+
+    else: 
+      errorEmbed = discord.Embed(title="Not enough balance!", colour=0xda1ae3)
+      await context.message.channel.send(embed=errorEmbed)
         
 @client.command(name="roulette")
 async def roulette(context, userBet):
@@ -317,9 +331,9 @@ async def roulette(context, userBet):
   )
   await context.message.channel.send(embed=initialEmbed)
 
-  userID = context.author.id
+  userName = context.author.name
   userBet = int(userBet)
-  withdrawalValidity = withdrawalPlayer(userBet, userID)
+  withdrawalValidity = withdrawalPlayer(userBet, userName)
 
   if withdrawalValidity == True:  #withdrawing money in advanced, to check if there is enough
     
@@ -339,7 +353,7 @@ async def roulette(context, userBet):
           winEmbed = discord.Embed(title="You win!", color=discord.Color.green())
           results = "Rolled a " + rollColor + "!"
           winEmbed.add_field(name=results, value=":grin:")
-          depositPlayer(userBet*2, userID)
+          depositPlayer(userBet*2, userName)
           await context.message.channel.send(embed=winEmbed)
           break
 
@@ -379,8 +393,5 @@ async def resetDatabase(context):
 async def getName(context):
   nameEmbed = discord.Embed(title=context.author.name)
   await context.message.channel.send(embed=nameEmbed)
-
-#TODO Adding a users balance
-#TODO Clearing a users balance
 
 client.run(os.getenv('TOKEN'))
