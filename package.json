@@ -8,7 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "start": "node ./dist/main.js",
-    "dev": "npm run build && node ./dist/main.js"
+    "dev": "npm run build && node ./dist/main.js",
+    "deploy_commands": "npm run build && node ./dist/deploy-commands.js"
   },
   "keywords": [],
   "author": "",
