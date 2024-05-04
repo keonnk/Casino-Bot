@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { SlashCommand } from '../types/types.js'
 
-const pingCommand: SlashCommand = {
+const coinflipCommand: SlashCommand = {
     //@ts-ignore
     data: new SlashCommandBuilder()
         .setName('coinflip')
@@ -33,7 +33,7 @@ const pingCommand: SlashCommand = {
 }
 
 const flipCoin = () => {
-    const r = (Math.random() * 101) //Generates a random integer between 0 and 100
+    const r = Math.random() * 101 //Generates a random integer between 0 and 100
     if (r <= 49){
         return 'heads' //True is heads
     }
@@ -42,4 +42,4 @@ const flipCoin = () => {
     }
 }
 
-export default pingCommand;
+export default coinflipCommand;
