@@ -8,11 +8,11 @@ const rouletteCommand: SlashCommand = {
         .setDescription('play roulette with the dealer')
         .addStringOption((option) => {
             return option.setName('color')
-                .setDescription('Choose red :red_circle: (47.3%), black :black_circle: (47.3%), or green :green_circle: (5.26%)!')
+                .setDescription('Choose red (47.3%), black (47.3%), or green (5.26%)!')
                 .setRequired(true)
                 .addChoices(
-                    { name: 'red', value: 'heads' },
-                    { name: 'black', value: 'tails' },
+                    { name: 'red', value: 'red'},
+                    { name: 'black', value: 'black'},
                     { name: 'green', value: 'green'}
                 )
         }),
