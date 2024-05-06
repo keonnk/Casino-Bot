@@ -83,8 +83,22 @@ const shuffleDeck = () => {
     return deck
 }
 
-const computeHandValue = (hand: [][]) => {
-    
+const computeHandValue = (hand: Array<Array<String>>) => {
+    let value = 0
+    hand.forEach((card) => {
+        let rank = card[0]
+        if(rank === 'A') {
+            
+        }
+        else if(rank === 'J' || rank === 'Q' || rank === 'K') {
+            value += 10
+        }
+        else {
+            value += parseInt(rank[0])
+        }
+    })
+
+    return value
 }
 
 export default blackjackCommand;
