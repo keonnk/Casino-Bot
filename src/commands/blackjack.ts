@@ -190,7 +190,7 @@ const generateEmbededResponse = (
     embed.setDescription(
         `**Dealer hand:**\n ${printHand(dealerHand, {isDealerHand: true, gameEnded})} 
         ${gameEnded ? `value: ${computeHandValue(dealerHand)}\n` : ''}
-        **Player hand:**\n ${printHand(dealerHand, {isDealerHand: false, gameEnded})}
+        **Player hand:**\n ${printHand(playerHand, {isDealerHand: false, gameEnded})}
         value: ${computeHandValue(playerHand)}\n
         ${description ? `**${description}**`: ''}`
     )
