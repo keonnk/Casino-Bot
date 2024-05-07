@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Collector, ComponentType, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Collector, ColorResolvable, ComponentType, Embed, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { SlashCommand } from '../types/types.js'
 
 const blackjackCommand: SlashCommand = {
@@ -27,15 +27,13 @@ const blackjackCommand: SlashCommand = {
             .addComponents(standButton)
 
         const embedResponse = new EmbedBuilder()
-            .setColor('Purple')
             .setTitle('Blackjack')
-            .setDescription(
-                `Your hand: ${playerHand.toString()}\n 
-                value: ${computeHandValue(playerHand)}
-                \n\n
-                Dealer hand: ${dealerHand[0].toString()}\n
-                value: ${computeHandValue(dealerHand)}`
-            )
+
+        generateEmbededResponse(
+            embedResponse,
+            {playerHand, dealerHand},
+            {color: 'Purple'}
+        )
         
         const response = await interaction.reply({
             embeds: [embedResponse],
@@ -51,28 +49,22 @@ const blackjackCommand: SlashCommand = {
 
             collector.on('collect', async (interaction) => {
                 if(interaction.customId === 'hit') {
+
                     playerHand = [...playerHand, deck.pop()]
                     let playerValue = computeHandValue(playerHand)
+
                     if(playerValue > 21) {
-                        embedResponse.setDescription(
-                            `Your hand: ${playerHand.toString()}\n 
-                            value: ${computeHandValue(playerHand)}
-                            \n\n
-                            Dealer hand: ${dealerHand[0].toString()}\n
-                            value: ${computeHandValue(dealerHand)}
-                            \n\n
-                            Player busts, dealer wins!`
+                        generateEmbededResponse(
+                            embedResponse,
+                            {playerHand, dealerHand},
+                            {color: 'Red', description: 'Player busts, dealer wins!'}
                         )
-                        embedResponse.setColor('Red')
                         await interaction.update({embeds: [embedResponse], components: []})
                     }
                     else {
-                        embedResponse.setDescription(
-                            `Your hand: ${playerHand.toString()}\n 
-                            value: ${computeHandValue(playerHand)}
-                            \n\n
-                            Dealer hand: ${dealerHand[0].toString()}\n
-                            value: ${computeHandValue(dealerHand)}`
+                        generateEmbededResponse(
+                            embedResponse,
+                            {playerHand, dealerHand},
                         )
                         await interaction.update({embeds: [embedResponse]})
                     }
@@ -86,40 +78,25 @@ const blackjackCommand: SlashCommand = {
                         dealerHand = [...dealerHand, deck.pop()]
                     }
                     if(dealerValue > 21) {
-                        embedResponse.setColor('Green')
-                        embedResponse.setDescription(
-                            `Your hand: ${playerHand.toString()}\n 
-                            value: ${computeHandValue(playerHand)}
-                            \n\n
-                            Dealer hand: ${dealerHand[0].toString()}\n
-                            value: ${computeHandValue(dealerHand)}
-                            \n\n
-                            Dealer busts, you win!`
+                        generateEmbededResponse(
+                            embedResponse,
+                            {playerHand, dealerHand},
+                            {color: 'Green', description: 'Dealer busts, you w'}
                         )
                     }
                     else {
                         if(dealerValue > playerValue) {
-                            embedResponse.setColor('Red')
-                            embedResponse.setDescription(
-                                `Your hand: ${playerHand.toString()}\n 
-                                value: ${computeHandValue(playerHand)}
-                                \n\n
-                                Dealer hand: ${dealerHand[0].toString()}\n
-                                value: ${computeHandValue(dealerHand)}
-                                \n\n
-                                You lose!`
+                            generateEmbededResponse(
+                                embedResponse,
+                                {playerHand, dealerHand},
+                                {color: 'Red', description: 'You lose!'}
                             )
                         }
                         else {
-                            embedResponse.setColor('Green')
-                            embedResponse.setDescription(
-                                `Your hand: ${playerHand.toString()}\n 
-                                value: ${computeHandValue(playerHand)}
-                                \n\n
-                                Dealer hand: ${dealerHand[0].toString()}\n
-                                value: ${computeHandValue(dealerHand)}
-                                \n\n
-                                You win!`
+                            generateEmbededResponse(
+                                embedResponse,
+                                {playerHand, dealerHand},
+                                {color: 'Green', description: 'You win!'}
                             )
                         }
                     }
@@ -195,6 +172,27 @@ const computeHandValue = (hand: Array<Array<String>>) => {
     }
 
     return value
+}
+
+const generateEmbededResponse = (
+    embed: EmbedBuilder, 
+    hands: {playerHand: any[], dealerHand: any[]}, 
+    options?: {color?: ColorResolvable, description?: String}
+) => {
+    const {playerHand, dealerHand} = {...hands}
+    const {color, description} = {...options}
+    if(color) {
+        embed.setColor(color)
+    }
+    embed.setDescription(
+        `Dealer hand: ${dealerHand.toString()}\n 
+        value: ${computeHandValue(dealerHand)}
+        \n
+        Player hand: ${playerHand.toString()}\n
+        value: ${computeHandValue(playerHand)}
+        \n
+        ${description ?? ''}`
+    )
 }
 
 export default blackjackCommand;
