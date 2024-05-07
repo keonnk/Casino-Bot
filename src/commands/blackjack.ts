@@ -185,14 +185,20 @@ const generateEmbededResponse = (
         embed.setColor(color)
     }
     embed.setDescription(
-        `Dealer hand: ${dealerHand.toString()}\n 
-        value: ${computeHandValue(dealerHand)}
-        \n
-        Player hand: ${playerHand.toString()}\n
-        value: ${computeHandValue(playerHand)}
-        \n
-        ${description ?? ''}`
+        `**Dealer hand:**\n ${printHand(dealerHand)} 
+        value: ${computeHandValue(dealerHand)}\n
+        **Player hand:**\n ${printHand(dealerHand)}
+        value: ${computeHandValue(playerHand)}\n
+        ${description ? `**${description}**`: ''}`
     )
+}
+
+const printHand = (hand: Array<Array<String>>) => {
+    let output = ""
+    hand.forEach((card) => {
+        output += `${card[0]}${card[1]} `
+    })
+    return output
 }
 
 export default blackjackCommand;
