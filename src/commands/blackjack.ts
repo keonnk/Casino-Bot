@@ -9,21 +9,33 @@ const blackjackCommand: SlashCommand = {
     async execute(interaction: ChatInputCommandInteraction) {
         let deck = shuffleDeck()
 
-        let dealerHand = []
+        let dealerHand = [deck.pop(), deck.pop()]
         let playerHand = [deck.pop(), deck.pop()]
 
-        const testButton = new ButtonBuilder()
+        const hitButton = new ButtonBuilder()
             .setCustomId('hit')
             .setLabel('Hit')
             .setStyle(ButtonStyle.Primary)
+
+        const standButton = new ButtonBuilder()
+            .setCustomId('stand')
+            .setLabel('Stand')
+            .setStyle(ButtonStyle.Primary)
         
         const row = new ActionRowBuilder()
-            .addComponents(testButton)
+            .addComponents(hitButton)
+            .addComponents(standButton)
 
         const embedResponse = new EmbedBuilder()
             .setColor('Purple')
             .setTitle('Blackjack')
-            .setDescription(`Your hand: ${playerHand.toString()}`)
+            .setDescription(
+                `Your hand: ${playerHand.toString()}\n 
+                value: ${computeHandValue(playerHand)}
+                \n\n
+                Dealer hand: ${dealerHand[0].toString()}\n
+                value: ${computeHandValue(dealerHand)}`
+            )
         
         const response = await interaction.reply({
             embeds: [embedResponse],
@@ -40,9 +52,80 @@ const blackjackCommand: SlashCommand = {
             collector.on('collect', async (interaction) => {
                 if(interaction.customId === 'hit') {
                     playerHand = [...playerHand, deck.pop()]
+                    let playerValue = computeHandValue(playerHand)
+                    if(playerValue > 21) {
+                        embedResponse.setDescription(
+                            `Your hand: ${playerHand.toString()}\n 
+                            value: ${computeHandValue(playerHand)}
+                            \n\n
+                            Dealer hand: ${dealerHand[0].toString()}\n
+                            value: ${computeHandValue(dealerHand)}
+                            \n\n
+                            Player busts, dealer wins!`
+                        )
+                        embedResponse.setColor('Red')
+                        await interaction.update({embeds: [embedResponse], components: []})
+                    }
+                    else {
+                        embedResponse.setDescription(
+                            `Your hand: ${playerHand.toString()}\n 
+                            value: ${computeHandValue(playerHand)}
+                            \n\n
+                            Dealer hand: ${dealerHand[0].toString()}\n
+                            value: ${computeHandValue(dealerHand)}`
+                        )
+                        await interaction.update({embeds: [embedResponse]})
+                    }
                 }
-                embedResponse.setDescription(`Your hand: ${playerHand.toString()}`)
-                await interaction.update({embeds: [embedResponse]})
+
+                if(interaction.customId === 'stand') {
+                    let playerValue = computeHandValue(playerHand)
+                    let dealerValue = computeHandValue(dealerHand)
+
+                    while(dealerValue < 17) {
+                        dealerHand = [...dealerHand, deck.pop()]
+                    }
+                    if(dealerValue > 21) {
+                        embedResponse.setColor('Green')
+                        embedResponse.setDescription(
+                            `Your hand: ${playerHand.toString()}\n 
+                            value: ${computeHandValue(playerHand)}
+                            \n\n
+                            Dealer hand: ${dealerHand[0].toString()}\n
+                            value: ${computeHandValue(dealerHand)}
+                            \n\n
+                            Dealer busts, you win!`
+                        )
+                    }
+                    else {
+                        if(dealerValue > playerValue) {
+                            embedResponse.setColor('Red')
+                            embedResponse.setDescription(
+                                `Your hand: ${playerHand.toString()}\n 
+                                value: ${computeHandValue(playerHand)}
+                                \n\n
+                                Dealer hand: ${dealerHand[0].toString()}\n
+                                value: ${computeHandValue(dealerHand)}
+                                \n\n
+                                You lose!`
+                            )
+                        }
+                        else {
+                            embedResponse.setColor('Green')
+                            embedResponse.setDescription(
+                                `Your hand: ${playerHand.toString()}\n 
+                                value: ${computeHandValue(playerHand)}
+                                \n\n
+                                Dealer hand: ${dealerHand[0].toString()}\n
+                                value: ${computeHandValue(dealerHand)}
+                                \n\n
+                                You win!`
+                            )
+                        }
+                    }
+                    
+                    await interaction.update({embeds: [embedResponse], components: []})
+                }
             })
         }
         catch (err) {
@@ -85,18 +168,31 @@ const shuffleDeck = () => {
 
 const computeHandValue = (hand: Array<Array<String>>) => {
     let value = 0
+    let aceCount = 0
     hand.forEach((card) => {
         let rank = card[0]
+
         if(rank === 'A') {
-            
+            aceCount++
         }
         else if(rank === 'J' || rank === 'Q' || rank === 'K') {
             value += 10
         }
         else {
-            value += parseInt(rank[0])
+            //@ts-ignore
+            value += parseInt(rank)
         }
     })
+
+    //Dynamically compute aces after all standard cards
+    for(let i=0; i<aceCount; i++) {
+        if(value + 11 < 22) { //ace becomes 11 if total is less than 22
+            value += 11
+        }
+        else { //Otherwise, ace is 1
+            value += 1
+        }
+    }
 
     return value
 }
