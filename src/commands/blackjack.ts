@@ -45,7 +45,7 @@ const blackjackCommand: SlashCommand = {
         const collectorFilter = i => i.user.id === interaction.user.id; 
 
         try {
-            const collector = response.createMessageComponentCollector({filter: collectorFilter, componentType: ComponentType.Button})
+            const collector = response.createMessageComponentCollector({filter: collectorFilter, componentType: ComponentType.Button, time: 180000})
 
             collector.on('collect', async (interaction) => {
                 if(interaction.customId === 'hit') {
@@ -57,9 +57,10 @@ const blackjackCommand: SlashCommand = {
                         generateEmbededResponse(
                             embedResponse,
                             {playerHand, dealerHand},
-                            {color: 'Red', description: 'Player busts, dealer wins!'}
+                            {color: 'Red', description: 'Player busts, dealer wins!', gameEnded: true}
                         )
                         await interaction.update({embeds: [embedResponse], components: []})
+                        collector.stop()
                     }
                     else {
                         generateEmbededResponse(
@@ -76,12 +77,13 @@ const blackjackCommand: SlashCommand = {
 
                     while(dealerValue < 17) {
                         dealerHand = [...dealerHand, deck.pop()]
+                        dealerValue = computeHandValue(dealerHand)                        
                     }
                     if(dealerValue > 21) {
                         generateEmbededResponse(
                             embedResponse,
                             {playerHand, dealerHand},
-                            {color: 'Green', description: 'Dealer busts, you w'}
+                            {color: 'Green', description: 'Dealer busts, you win!', gameEnded: true}
                         )
                     }
                     else {
@@ -89,19 +91,20 @@ const blackjackCommand: SlashCommand = {
                             generateEmbededResponse(
                                 embedResponse,
                                 {playerHand, dealerHand},
-                                {color: 'Red', description: 'You lose!'}
+                                {color: 'Red', description: 'You lose!', gameEnded: true}
                             )
                         }
                         else {
                             generateEmbededResponse(
                                 embedResponse,
                                 {playerHand, dealerHand},
-                                {color: 'Green', description: 'You win!'}
+                                {color: 'Green', description: 'You win!', gameEnded: true}
                             )
                         }
                     }
                     
                     await interaction.update({embeds: [embedResponse], components: []})
+                    collector.stop()
                 }
             })
         }
@@ -177,27 +180,33 @@ const computeHandValue = (hand: Array<Array<String>>) => {
 const generateEmbededResponse = (
     embed: EmbedBuilder, 
     hands: {playerHand: any[], dealerHand: any[]}, 
-    options?: {color?: ColorResolvable, description?: String}
+    options?: {color?: ColorResolvable, description?: String, gameEnded?: boolean}
 ) => {
     const {playerHand, dealerHand} = {...hands}
-    const {color, description} = {...options}
+    const {color, description, gameEnded} = {...options}
     if(color) {
         embed.setColor(color)
     }
     embed.setDescription(
-        `**Dealer hand:**\n ${printHand(dealerHand)} 
-        value: ${computeHandValue(dealerHand)}\n
-        **Player hand:**\n ${printHand(dealerHand)}
+        `**Dealer hand:**\n ${printHand(dealerHand, {isDealerHand: true, gameEnded})} 
+        ${gameEnded ? `value: ${computeHandValue(dealerHand)}\n` : ''}
+        **Player hand:**\n ${printHand(dealerHand, {isDealerHand: false, gameEnded})}
         value: ${computeHandValue(playerHand)}\n
         ${description ? `**${description}**`: ''}`
     )
 }
 
-const printHand = (hand: Array<Array<String>>) => {
+const printHand = (hand: Array<Array<String>>, state: {isDealerHand?: boolean, gameEnded?: boolean}) => {
     let output = ""
-    hand.forEach((card) => {
-        output += `${card[0]}${card[1]} `
-    })
+    if(state.isDealerHand && !state.gameEnded) {
+        let card = hand[0]
+        output += `${card[0]}${card[1]} ?? `
+    }
+    else {
+        hand.forEach((card) => {
+            output += `${card[0]}${card[1]} `
+        })
+    }
     return output
 }
 
