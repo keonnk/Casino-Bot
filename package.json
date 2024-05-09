@@ -9,19 +9,26 @@
     "build": "tsc",
     "start": "node ./dist/main.js",
     "dev": "npm run build && node ./dist/main.js",
-    "deploy_commands": "npm run build && node ./dist/deploy-commands.js"
+    "deploy_commands": "tsc && node ./dist/deploy-commands.js",
+    "db:generate": "drizzle-kit generate:pg --config=\"dist/drizzle.config.js\"",
+    "db:migrate": "tsc && node ./dist/drizzle/migrate.js",
+    "db:studio": "tsc && drizzle-kit studio --config=\"dist/drizzle.config.js\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.12.8",
+    "drizzle-kit": "^0.20.18",
     "nodemon": "^3.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
   "dependencies": {
     "discord.js": "^14.14.1",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.30.10",
+    "pg": "^8.11.5",
+    "postgres": "^3.4.4"
   }
 }
