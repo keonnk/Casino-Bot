@@ -94,6 +94,13 @@ const blackjackCommand: SlashCommand = {
                                 {color: 'Red', description: 'You lose!', gameEnded: true}
                             )
                         }
+                        else if (dealerValue === playerValue) {
+                            generateEmbededResponse(
+                                embedResponse,
+                                {playerHand, dealerHand},
+                                {color: 'Orange', description: 'Push!', gameEnded: true}
+                            )
+                        }
                         else {
                             generateEmbededResponse(
                                 embedResponse,

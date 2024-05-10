@@ -15,7 +15,6 @@ const coinflipCommand: SlashCommand = {
                     { name: 'heads', value: 'heads' },
                     { name: 'tails', value: 'tails' }
                 )
-                .setAutocomplete(true)
         })
         .addNumberOption((option) => {
             return option.setName('wager')

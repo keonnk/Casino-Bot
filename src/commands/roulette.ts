@@ -1,5 +1,6 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { SlashCommand } from '../types/types.js'
+import { getUser, updateBalance } from '../drizzle/controllers/UserController.js'
 
 const rouletteCommand: SlashCommand = {
     //@ts-ignore
@@ -15,21 +16,44 @@ const rouletteCommand: SlashCommand = {
                     { name: 'black', value: 'black'},
                     { name: 'green', value: 'green'}
                 )
+        })
+        .addNumberOption((option) => {
+            return option.setName('wager')
+                .setDescription('Amount to be wagered')
+                .setRequired(true)
         }),
     async execute(interaction: ChatInputCommandInteraction) {
         const chosenSide = interaction.options.getString('color')
-        
-        const wheelResult = rollWheel()
+        const wager = interaction.options.getNumber('wager')
+        const user_id = interaction.user.id
 
-        let userWon: boolean = false
-        if(chosenSide == wheelResult) userWon = true;
+        try {
+            const user = await getUser(user_id)            
+            const wheelResult = rollWheel()
+    
+            let userWon: boolean = false
+            if(chosenSide == wheelResult) userWon = true;
 
-        const embedResponse = new EmbedBuilder()
-            .setColor(userWon ? 'Green' : 'Red')
-            .setTitle(userWon ? 'You won! :grin:' : 'You lost :slight_frown:')
-            .setDescription(`Wheel landed on :${wheelResult}_circle:`)
+            if(userWon && chosenSide != 'Green') {
+                await updateBalance(user_id, user.balance + wager) //Red and Black pay even 
+            }
+            else if (userWon && chosenSide === 'Green') {
+                await updateBalance(user_id, user.balance + (wager * 17)) //Green pays 17/1
+            }
+            else {
+                await updateBalance(user_id, user.balance - wager)
+            }
+    
+            const embedResponse = new EmbedBuilder()
+                .setColor(userWon ? 'Green' : 'Red')
+                .setTitle(userWon ? 'You won! :grin:' : 'You lost :slight_frown:')
+                .setDescription(`Wheel landed on :${wheelResult}_circle:`)
+            
+            interaction.reply({embeds: [embedResponse]})
+        } catch(err) {
+            interaction.reply("ERROR: " + err.message ?? err)
+        }
         
-        interaction.reply({embeds: [embedResponse]})
     }
 }
 
