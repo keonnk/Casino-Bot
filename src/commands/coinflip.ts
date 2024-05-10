@@ -1,5 +1,6 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { SlashCommand } from '../types/types.js'
+import { getUser, updateBalance } from '../drizzle/controllers/UserController.js'
 
 const coinflipCommand: SlashCommand = {
     //@ts-ignore
@@ -14,21 +15,47 @@ const coinflipCommand: SlashCommand = {
                     { name: 'heads', value: 'heads' },
                     { name: 'tails', value: 'tails' }
                 )
+                .setAutocomplete(true)
+        })
+        .addNumberOption((option) => {
+            return option.setName('wager')
+                .setDescription('Amount to be wagered')
+                .setRequired(true)
         }),
     async execute(interaction: ChatInputCommandInteraction) {
         const chosenSide = interaction.options.getString('side')
-        
-        const flippedSide = flipCoin()
+        const wager = interaction.options.getNumber('wager')
+        const user_id = interaction.user.id
 
-        let userWon: boolean = false
-        if(chosenSide == flippedSide) userWon = true;
-
-        const embedResponse = new EmbedBuilder()
-            .setColor(userWon ? 'Green' : 'Red')
-            .setTitle(userWon ? 'You won! :grin:' : 'You lost :slight_frown:')
-            .setDescription(`Coin landed on ${flippedSide}`)
-        
-        interaction.reply({embeds: [embedResponse]})
+        try {
+            const user = await getUser(user_id)
+    
+            if(user.balance < wager) {
+                await interaction.reply("You don't have enough for this wager, please lower the amount")
+                return
+            }
+            
+            const flippedSide = flipCoin()
+    
+            let userWon: boolean = false
+            if(chosenSide == flippedSide) userWon = true;
+    
+            if(userWon) {
+                await updateBalance(user_id, user.balance + wager)
+            }
+            else {
+                await updateBalance(user_id, user.balance - wager)
+            }
+    
+            const embedResponse = new EmbedBuilder()
+                .setColor(userWon ? 'Green' : 'Red')
+                .setTitle(userWon ? 'You won! :grin:' : 'You lost :slight_frown:')
+                .setDescription(`Coin landed on ${flippedSide}`)
+            
+            await interaction.reply({embeds: [embedResponse]})
+        } catch(err) {
+            interaction.reply("ERROR: " + err.message ?? err)
+        }
     }
 }
 
