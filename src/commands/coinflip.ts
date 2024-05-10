@@ -30,7 +30,7 @@ const coinflipCommand: SlashCommand = {
             const user = await getUser(user_id)
     
             if(user.balance < wager) {
-                await interaction.reply("You don't have enough for this wager, please lower the amount")
+                await interaction.reply("You don't have enough for this wager")
                 return
             }
             
@@ -40,10 +40,10 @@ const coinflipCommand: SlashCommand = {
             if(chosenSide == flippedSide) userWon = true;
     
             if(userWon) {
-                await updateBalance(user_id, user.balance + wager)
+                await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true})
             }
             else {
-                await updateBalance(user_id, user.balance - wager)
+                await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: false})
             }
     
             const embedResponse = new EmbedBuilder()

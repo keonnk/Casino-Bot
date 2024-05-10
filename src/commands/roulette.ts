@@ -28,20 +28,26 @@ const rouletteCommand: SlashCommand = {
         const user_id = interaction.user.id
 
         try {
-            const user = await getUser(user_id)            
+            const user = await getUser(user_id)   
+            
+            if(user.balance < wager) {
+                await interaction.reply("You don't have enough for this wager")
+                return
+            }
+
             const wheelResult = rollWheel()
     
             let userWon: boolean = false
             if(chosenSide == wheelResult) userWon = true;
 
             if(userWon && chosenSide != 'Green') {
-                await updateBalance(user_id, user.balance + wager) //Red and Black pay even 
+                await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true}) //Red and Black pay even 
             }
             else if (userWon && chosenSide === 'Green') {
-                await updateBalance(user_id, user.balance + (wager * 17)) //Green pays 17/1
+                await updateBalance({user_id, currentBalance: user.balance, amount: (wager * 17), isDeposit: true}) //Green pays 17/1
             }
             else {
-                await updateBalance(user_id, user.balance - wager)
+                await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: false})
             }
     
             const embedResponse = new EmbedBuilder()

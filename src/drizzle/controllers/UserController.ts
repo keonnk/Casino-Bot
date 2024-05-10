@@ -12,14 +12,35 @@ export async function getUser(user_id: string) {
     return user[0]
 }
 
-export async function updateBalance(user_id: string, balance: number) {
-    const user = await db.update(UserTable).set({balance}).where(eq(UserTable.user_id, user_id)).returning()
+export async function updateBalance(params: {user_id: string, currentBalance: number, amount: number, isDeposit: boolean}) {
+    const {user_id, currentBalance, amount, isDeposit} = params
+    let result
 
-    if(user[0].balance !== balance) {
-        throw new Error("Balance was not properly updated")
+    if(isDeposit) {
+        result = await db
+            .update(UserTable)
+            .set({balance: currentBalance + amount})
+            .where(eq(UserTable.user_id, user_id))
+            .returning()        
     }
+    else {
+        if(currentBalance - amount < 0) { //Prevent negative values for balance
+            result = await db
+                .update(UserTable)
+                .set({balance: 0})
+                .where(eq(UserTable.user_id, user_id))
+                .returning()
+        }
+        else {
+            result = await db
+            .update(UserTable)
+            .set({balance: currentBalance - amount})
+            .where(eq(UserTable.user_id, user_id))
+            .returning()
+        }
+    }    
 
-    return user[0]
+    return result[0]
 }
 
 export async function giveDailyBalance(user_id: string) {
