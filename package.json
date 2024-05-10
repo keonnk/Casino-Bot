@@ -19,7 +19,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.12.8",
-    "drizzle-kit": "^0.20.18",
+    "drizzle-kit": "^0.21.1",
     "nodemon": "^3.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"

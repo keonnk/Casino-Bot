@@ -1,12 +1,21 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Collector, ColorResolvable, ComponentType, Embed, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { SlashCommand } from '../types/types.js'
+import { getUser, updateBalance } from '../drizzle/controllers/UserController.js'
 
 const blackjackCommand: SlashCommand = {
     //@ts-ignore
     data: new SlashCommandBuilder()
         .setName('blackjack')
-        .setDescription('play blackjack with the dealer'),
+        .setDescription('play blackjack with the dealer')
+        .addNumberOption((option) => {
+            return option.setName('wager')
+                .setDescription('Amount to be wagered')
+                .setRequired(true)
+        }),
     async execute(interaction: ChatInputCommandInteraction) {
+        const wager = interaction.options.getNumber('wager')
+        const user_id = interaction.user.id
+
         let deck = shuffleDeck()
 
         let dealerHand = [deck.pop(), deck.pop()]
@@ -45,6 +54,7 @@ const blackjackCommand: SlashCommand = {
         const collectorFilter = i => i.user.id === interaction.user.id; 
 
         try {
+            const user = await getUser(user_id)
             const collector = response.createMessageComponentCollector({filter: collectorFilter, componentType: ComponentType.Button, time: 180000})
 
             collector.on('collect', async (interaction) => {
@@ -59,6 +69,7 @@ const blackjackCommand: SlashCommand = {
                             {playerHand, dealerHand},
                             {color: 'Red', description: 'Player busts, dealer wins!', gameEnded: true}
                         )
+                        await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: false})
                         await interaction.update({embeds: [embedResponse], components: []})
                         collector.stop()
                     }
@@ -71,7 +82,7 @@ const blackjackCommand: SlashCommand = {
                     }
                 }
 
-                if(interaction.customId === 'stand') {
+                else if(interaction.customId === 'stand') {
                     let playerValue = computeHandValue(playerHand)
                     let dealerValue = computeHandValue(dealerHand)
 
@@ -85,6 +96,7 @@ const blackjackCommand: SlashCommand = {
                             {playerHand, dealerHand},
                             {color: 'Green', description: 'Dealer busts, you win!', gameEnded: true}
                         )
+                        await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true})
                     }
                     else {
                         if(dealerValue > playerValue) {
@@ -93,6 +105,7 @@ const blackjackCommand: SlashCommand = {
                                 {playerHand, dealerHand},
                                 {color: 'Red', description: 'You lose!', gameEnded: true}
                             )
+                            await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: false})
                         }
                         else if (dealerValue === playerValue) {
                             generateEmbededResponse(
@@ -107,6 +120,7 @@ const blackjackCommand: SlashCommand = {
                                 {playerHand, dealerHand},
                                 {color: 'Green', description: 'You win!', gameEnded: true}
                             )
+                            await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true})
                         }
                     }
                     
@@ -116,7 +130,7 @@ const blackjackCommand: SlashCommand = {
             })
         }
         catch (err) {
-            await interaction.editReply({content: "failed"})
+            await interaction.editReply({content: "ERROR: " + err.message ?? err})
         }
     }
 }

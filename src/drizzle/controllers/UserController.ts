@@ -21,23 +21,14 @@ export async function updateBalance(params: {user_id: string, currentBalance: nu
             .update(UserTable)
             .set({balance: currentBalance + amount})
             .where(eq(UserTable.user_id, user_id))
-            .returning()        
+            .returning()
     }
     else {
-        if(currentBalance - amount < 0) { //Prevent negative values for balance
-            result = await db
-                .update(UserTable)
-                .set({balance: 0})
-                .where(eq(UserTable.user_id, user_id))
-                .returning()
-        }
-        else {
             result = await db
             .update(UserTable)
             .set({balance: currentBalance - amount})
             .where(eq(UserTable.user_id, user_id))
             .returning()
-        }
     }    
 
     return result[0]
