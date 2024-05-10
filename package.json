@@ -10,7 +10,7 @@
     "start": "node ./dist/main.js",
     "dev": "npm run build && node ./dist/main.js",
     "deploy_commands": "tsc && node ./dist/deploy-commands.js",
-    "db:generate": "drizzle-kit generate:pg --config=\"dist/drizzle.config.js\"",
+    "db:generate": "tsc && drizzle-kit generate:pg --config=\"dist/drizzle.config.js\"",
     "db:migrate": "tsc && node ./dist/drizzle/migrate.js",
     "db:studio": "tsc && drizzle-kit studio --config=\"dist/drizzle.config.js\""
   },

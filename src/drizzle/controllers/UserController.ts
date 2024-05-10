@@ -1,6 +1,6 @@
 import { db } from "../db.js";
 import { UserTable } from "../schema.js";
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 
 export async function getUser(user_id: string) {
     const user = await db.select().from(UserTable).where(eq(UserTable.user_id, user_id))
@@ -18,6 +18,12 @@ export async function updateBalance(user_id: string, balance: number) {
     if(user[0].balance !== balance) {
         throw new Error("Balance was not properly updated")
     }
+
+    return user[0]
+}
+
+export async function giveDailyBalance(user_id: string) {
+    const user = await db.update(UserTable).set({balance: sql`balance + 1000`, lastDaily: new Date()}).where(eq(UserTable.user_id, user_id)).returning()
 
     return user[0]
 }
