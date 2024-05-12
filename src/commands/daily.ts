@@ -11,14 +11,22 @@ const dailyCommand: SlashCommand = {
 
         let user = await getUser(user_id)
         const currentTime = new Date()
+        let timeDifference = (currentTime.getTime() - user.lastDaily.getTime()) / 1000 //converting to seconds
 
-        if (((currentTime.getDate() / 1000) - (user.lastDaily.getTime() / 1000)) > 86400) { //86400 seconds for each 24 hours
+        if (timeDifference >= 86400) { //86400 seconds in each 24 hours
             user = await giveDailyBalance(user_id)
             await interaction.reply(`Daily claimed! You now have $${user.balance}`)
         }
         else {
-            //TODO: Display how many hours and minutes are left before they can claim
-            await interaction.reply("You cannot claim your daily reward yet!")
+            let timeLeft = (86400 - timeDifference) / 60 / 60 //converting to hours
+            let isHours = true
+
+            if(timeLeft < 1) {
+                timeLeft *= 60 //converting back to minutes
+                isHours = false
+            }
+
+            await interaction.reply(`You cannot claim your daily reward for another ${timeLeft.toFixed(0)} ${isHours ? 'hours!' : 'minutes!'}`)
         }
     }
 }
