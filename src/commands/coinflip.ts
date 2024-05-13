@@ -27,7 +27,7 @@ const coinflipCommand: SlashCommand = {
         const user_id = interaction.user.id
 
         try {
-            const user = await getUser(user_id)
+            let user = await getUser(user_id)
     
             if(user.balance < wager) {
                 await interaction.reply("You don't have enough for this wager")
@@ -40,16 +40,16 @@ const coinflipCommand: SlashCommand = {
             if(chosenSide == flippedSide) userWon = true;
     
             if(userWon) {
-                await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true})
+                user = await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true})
             }
             else {
-                await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: false})
+                user = await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: false})
             }
     
             const embedResponse = new EmbedBuilder()
                 .setColor(userWon ? 'Green' : 'Red')
                 .setTitle(userWon ? 'You won! :grin:' : 'You lost :slight_frown:')
-                .setDescription(`Coin landed on ${flippedSide}`)
+                .setDescription(`Coin landed on ${flippedSide}\nYou have $${user.balance}`)
             
             await interaction.reply({embeds: [embedResponse]})
         } catch(err) {

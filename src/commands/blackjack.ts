@@ -54,7 +54,9 @@ const blackjackCommand: SlashCommand = {
         const collectorFilter = i => i.user.id === interaction.user.id; 
 
         try {
-            const user = await getUser(user_id)
+            let user = await getUser(user_id)
+
+            //Collector to listen for hit/stand button interactions from user
             const collector = response.createMessageComponentCollector({filter: collectorFilter, componentType: ComponentType.Button, time: 180000})
 
             collector.on('collect', async (interaction) => {
@@ -63,17 +65,17 @@ const blackjackCommand: SlashCommand = {
                     playerHand = [...playerHand, deck.pop()]
                     let playerValue = computeHandValue(playerHand)
 
-                    if(playerValue > 21) {
+                    if(playerValue > 21) { //Player busts
+                        user = await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: false})
                         generateEmbededResponse(
                             embedResponse,
                             {playerHand, dealerHand},
-                            {color: 'Red', description: 'Player busts, dealer wins!', gameEnded: true}
+                            {color: 'Red', description: `Player busts, dealer wins!\nYou have $${user.balance}`, gameEnded: true}
                         )
-                        await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: false})
                         await interaction.update({embeds: [embedResponse], components: []})
                         collector.stop()
                     }
-                    else {
+                    else { //Game is still alive
                         generateEmbededResponse(
                             embedResponse,
                             {playerHand, dealerHand},
@@ -86,41 +88,42 @@ const blackjackCommand: SlashCommand = {
                     let playerValue = computeHandValue(playerHand)
                     let dealerValue = computeHandValue(dealerHand)
 
-                    while(dealerValue < 17) {
+                    while(dealerValue < 17) { 
+                        //Dealer will hit again
                         dealerHand = [...dealerHand, deck.pop()]
                         dealerValue = computeHandValue(dealerHand)                        
                     }
-                    if(dealerValue > 21) {
+                    if(dealerValue > 21) { //Dealer busts
+                        user = await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true})
                         generateEmbededResponse(
                             embedResponse,
                             {playerHand, dealerHand},
-                            {color: 'Green', description: 'Dealer busts, you win!', gameEnded: true}
+                            {color: 'Green', description: `Dealer busts, you win!\nYou have $${user.balance}`, gameEnded: true}
                         )
-                        await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true})
                     }
                     else {
-                        if(dealerValue > playerValue) {
+                        if(dealerValue > playerValue) { //Dealer wins
+                            user = await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: false})
                             generateEmbededResponse(
                                 embedResponse,
                                 {playerHand, dealerHand},
-                                {color: 'Red', description: 'You lose!', gameEnded: true}
-                            )
-                            await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: false})
-                        }
-                        else if (dealerValue === playerValue) {
-                            generateEmbededResponse(
-                                embedResponse,
-                                {playerHand, dealerHand},
-                                {color: 'Orange', description: 'Push!', gameEnded: true}
+                                {color: 'Red', description: `You lose!\nYou have $${user.balance}`, gameEnded: true}
                             )
                         }
-                        else {
+                        else if (dealerValue === playerValue) { //Push
                             generateEmbededResponse(
                                 embedResponse,
                                 {playerHand, dealerHand},
-                                {color: 'Green', description: 'You win!', gameEnded: true}
+                                {color: 'Orange', description: `Push!\nYou have $${user.balance}`, gameEnded: true}
                             )
-                            await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true})
+                        }
+                        else { //Player wins
+                            user = await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true})
+                            generateEmbededResponse(
+                                embedResponse,
+                                {playerHand, dealerHand},
+                                {color: 'Green', description: `You win!\nYou have $${user.balance}`, gameEnded: true}
+                            )
                         }
                     }
                     

@@ -28,7 +28,7 @@ const rouletteCommand: SlashCommand = {
         const user_id = interaction.user.id
 
         try {
-            const user = await getUser(user_id)   
+            let user = await getUser(user_id)   
             
             if(user.balance < wager) {
                 await interaction.reply("You don't have enough for this wager")
@@ -41,19 +41,19 @@ const rouletteCommand: SlashCommand = {
             if(chosenSide == wheelResult) userWon = true;
 
             if(userWon && chosenSide != 'Green') {
-                await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true}) //Red and Black pay even 
+                user = await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true}) //Red and Black pay even 
             }
             else if (userWon && chosenSide === 'Green') {
-                await updateBalance({user_id, currentBalance: user.balance, amount: (wager * 17), isDeposit: true}) //Green pays 17/1
+                user = await updateBalance({user_id, currentBalance: user.balance, amount: (wager * 17), isDeposit: true}) //Green pays 17/1
             }
             else {
-                await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: false})
+                user = await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: false})
             }
     
             const embedResponse = new EmbedBuilder()
                 .setColor(userWon ? 'Green' : 'Red')
                 .setTitle(userWon ? 'You won! :grin:' : 'You lost :slight_frown:')
-                .setDescription(`Wheel landed on :${wheelResult}_circle:`)
+                .setDescription(`Wheel landed on :${wheelResult}_circle:\nYou have $${user.balance}`)
             
             interaction.reply({embeds: [embedResponse]})
         } catch(err) {
