@@ -40,10 +40,10 @@ const rouletteCommand: SlashCommand = {
             let userWon: boolean = false
             if(chosenSide == wheelResult) userWon = true;
 
-            if(userWon && chosenSide != 'Green') {
+            if(userWon && chosenSide != 'green') {
                 user = await updateBalance({user_id, currentBalance: user.balance, amount: wager, isDeposit: true}) //Red and Black pay even 
             }
-            else if (userWon && chosenSide === 'Green') {
+            else if (userWon && chosenSide === 'green') {
                 user = await updateBalance({user_id, currentBalance: user.balance, amount: (wager * 17), isDeposit: true}) //Green pays 17/1
             }
             else {
