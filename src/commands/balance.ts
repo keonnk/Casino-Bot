@@ -19,7 +19,7 @@ const balanceCommand: SlashCommand = {
 
     try {
       const user = await getUser(user_id);
-      embedResponse.setDescription(`You currently have $${user.balance}`);
+      embedResponse.setDescription(`You currently have **$${user.balance}**`);
       await interaction.reply({ embeds: [embedResponse] });
     } catch (err) {
       console.error(err);
