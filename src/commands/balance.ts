@@ -23,7 +23,11 @@ const balanceCommand: SlashCommand = {
       await interaction.reply({ embeds: [embedResponse] });
     } catch (err) {
       console.error(err);
-      await interaction.reply("ERROR: " + err.message ?? err);
+      const errorEmbed = new EmbedBuilder()
+        .setTitle("ERROR")
+        .setColor("Red")
+        .setDescription(err.message ?? err);
+      await interaction.reply({ embeds: [errorEmbed] });
     }
   },
 };
