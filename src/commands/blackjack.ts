@@ -1,6 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Collector, ColorResolvable, ComponentType, Embed, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { SlashCommand } from '../types/types.js'
 import { getUser, updateBalance } from '../drizzle/controllers/UserController.js'
+import createErrorEmbed from '../utils/CreateErrorEmbed.js'
 
 const blackjackCommand: SlashCommand = {
     //@ts-ignore
@@ -133,7 +134,8 @@ const blackjackCommand: SlashCommand = {
             })
         }
         catch (err) {
-            await interaction.editReply({content: "ERROR: " + err.message ?? err})
+            console.error(err);
+            await interaction.reply({ embeds: [createErrorEmbed(err)] });
         }
     }
 }

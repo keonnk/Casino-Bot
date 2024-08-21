@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { SlashCommand } from '../types/types.js'
 import { getUser, updateBalance } from '../drizzle/controllers/UserController.js'
+import createErrorEmbed from '../utils/CreateErrorEmbed.js'
 
 const coinflipCommand: SlashCommand = {
     //@ts-ignore
@@ -53,7 +54,8 @@ const coinflipCommand: SlashCommand = {
             
             await interaction.reply({embeds: [embedResponse]})
         } catch(err) {
-            interaction.reply("ERROR: " + err.message ?? err)
+            console.error(err);
+            await interaction.reply({ embeds: [createErrorEmbed(err)] });
         }
     }
 }

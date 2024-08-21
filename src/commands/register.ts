@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 import { SlashCommand } from "../types/types.js";
 import { createUser } from "../drizzle/controllers/UserController.js";
+import createErrorEmbed from "../utils/CreateErrorEmbed.js";
 
 const registerCommand: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -24,11 +25,7 @@ const registerCommand: SlashCommand = {
       await interaction.reply({ embeds: [embedResponse] });
     } catch (err) {
       console.error(err);
-      const errorEmbed = new EmbedBuilder()
-        .setTitle("ERROR")
-        .setColor("Red")
-        .setDescription(err.message ?? err);
-      await interaction.reply({ embeds: [errorEmbed] });
+      await interaction.reply({ embeds: [createErrorEmbed(err)] });
     }
   },
 };
