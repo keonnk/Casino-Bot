@@ -9,6 +9,7 @@ import {
   giveDailyBalance,
 } from "../drizzle/controllers/UserController.js";
 import createErrorEmbed from "../utils/CreateErrorEmbed.js";
+import { addCommasToNumber } from "../utils/utils.js";
 
 const dailyCommand: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -31,7 +32,7 @@ const dailyCommand: SlashCommand = {
         embedResponse
           .setTitle("Daily claimed!")
           .setColor("Green")
-          .setDescription(`You currently have **$${user.balance}**`);
+          .setDescription(`You currently have **$${addCommasToNumber(user.balance)}**`);
         await interaction.reply({ embeds: [embedResponse] });
       } else {
         let timeLeft = (86400 - timeDifference) / 60 / 60; //converting to hours

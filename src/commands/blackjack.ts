@@ -2,6 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteracti
 import { SlashCommand } from '../types/types.js'
 import { getUser, updateBalance } from '../drizzle/controllers/UserController.js'
 import createErrorEmbed from '../utils/CreateErrorEmbed.js'
+import { addCommasToNumber } from '../utils/utils.js'
 
 const blackjackCommand: SlashCommand = {
     //@ts-ignore
@@ -71,7 +72,7 @@ const blackjackCommand: SlashCommand = {
                         generateEmbededResponse(
                             embedResponse,
                             {playerHand, dealerHand},
-                            {color: 'Red', description: `Player busts, dealer wins!\nYou have $${user.balance}`, gameEnded: true}
+                            {color: 'Red', description: `Player busts, dealer wins!\nYou have $${addCommasToNumber(user.balance)}`, gameEnded: true}
                         )
                         await interaction.update({embeds: [embedResponse], components: []})
                         collector.stop()
@@ -99,7 +100,7 @@ const blackjackCommand: SlashCommand = {
                         generateEmbededResponse(
                             embedResponse,
                             {playerHand, dealerHand},
-                            {color: 'Green', description: `Dealer busts, you win!\nYou have $${user.balance}`, gameEnded: true}
+                            {color: 'Green', description: `Dealer busts, you win!\nYou have $${addCommasToNumber(user.balance)}`, gameEnded: true}
                         )
                     }
                     else {
@@ -108,14 +109,14 @@ const blackjackCommand: SlashCommand = {
                             generateEmbededResponse(
                                 embedResponse,
                                 {playerHand, dealerHand},
-                                {color: 'Red', description: `You lose!\nYou have $${user.balance}`, gameEnded: true}
+                                {color: 'Red', description: `You lose!\nYou have $${addCommasToNumber(user.balance)}`, gameEnded: true}
                             )
                         }
                         else if (dealerValue === playerValue) { //Push
                             generateEmbededResponse(
                                 embedResponse,
                                 {playerHand, dealerHand},
-                                {color: 'Orange', description: `Push!\nYou have $${user.balance}`, gameEnded: true}
+                                {color: 'Orange', description: `Push!\nYou have $${addCommasToNumber(user.balance)}`, gameEnded: true}
                             )
                         }
                         else { //Player wins
@@ -123,7 +124,7 @@ const blackjackCommand: SlashCommand = {
                             generateEmbededResponse(
                                 embedResponse,
                                 {playerHand, dealerHand},
-                                {color: 'Green', description: `You win!\nYou have $${user.balance}`, gameEnded: true}
+                                {color: 'Green', description: `You win!\nYou have $${addCommasToNumber(user.balance)}`, gameEnded: true}
                             )
                         }
                     }

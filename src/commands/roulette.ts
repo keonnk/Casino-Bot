@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from '
 import { SlashCommand } from '../types/types.js'
 import { getUser, updateBalance } from '../drizzle/controllers/UserController.js'
 import createErrorEmbed from '../utils/CreateErrorEmbed.js'
+import { addCommasToNumber } from '../utils/utils.js'
 
 const rouletteCommand: SlashCommand = {
     //@ts-ignore
@@ -54,7 +55,7 @@ const rouletteCommand: SlashCommand = {
             const embedResponse = new EmbedBuilder()
                 .setColor(userWon ? 'Green' : 'Red')
                 .setTitle(userWon ? 'You won! :grin:' : 'You lost :slight_frown:')
-                .setDescription(`Wheel landed on :${wheelResult}_circle:\nYou have $${user.balance}`)
+                .setDescription(`Wheel landed on :${wheelResult}_circle:\nYou have $${addCommasToNumber(user.balance)}`)
             
             interaction.reply({embeds: [embedResponse]})
         } catch(err) {

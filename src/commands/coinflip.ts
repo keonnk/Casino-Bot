@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from '
 import { SlashCommand } from '../types/types.js'
 import { getUser, updateBalance } from '../drizzle/controllers/UserController.js'
 import createErrorEmbed from '../utils/CreateErrorEmbed.js'
+import { addCommasToNumber } from '../utils/utils.js'
 
 const coinflipCommand: SlashCommand = {
     //@ts-ignore
@@ -50,7 +51,7 @@ const coinflipCommand: SlashCommand = {
             const embedResponse = new EmbedBuilder()
                 .setColor(userWon ? 'Green' : 'Red')
                 .setTitle(userWon ? 'You won! :grin:' : 'You lost :slight_frown:')
-                .setDescription(`Coin landed on ${flippedSide}\nYou have $${user.balance}`)
+                .setDescription(`Coin landed on ${flippedSide}\nYou have $${addCommasToNumber(user.balance)}`)
             
             await interaction.reply({embeds: [embedResponse]})
         } catch(err) {

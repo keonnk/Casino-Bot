@@ -6,6 +6,7 @@ import {
 import { SlashCommand } from "../types/types.js";
 import { getUser } from "../drizzle/controllers/UserController.js";
 import createErrorEmbed from "../utils/CreateErrorEmbed.js";
+import { addCommasToNumber } from "../utils/utils.js";
 
 const balanceCommand: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -20,7 +21,7 @@ const balanceCommand: SlashCommand = {
 
     try {
       const user = await getUser(user_id);
-      embedResponse.setDescription(`You currently have **$${user.balance}**`);
+      embedResponse.setDescription(`You currently have **$${addCommasToNumber(user.balance)}**`);
       await interaction.reply({ embeds: [embedResponse] });
     } catch (err) {
       console.error(err);
